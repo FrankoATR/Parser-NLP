@@ -1,28 +1,59 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Iterable, List
+from typing import Iterable, List, Dict
 
 from .lexico_en import tag_sentence
 
-
 DETERMINERS = {
-    "a", "an", "the",
-    "this", "that", "these", "those",
-    "my", "your", "his", "her", "its", "our", "their",
-    "some", "any", "no", "each", "every",
+    "a",
+    "an",
+    "the",
+    "this",
+    "that",
+    "my",
+    "your",
+    "his",
+    "her",
+    "our",
+    "their",
 }
 
 PRONOUNS = {
-    "i", "you", "he", "she", "it", "we", "they",
-    "me", "him", "her", "us", "them",
-    "who", "whom", "which", "that",
+    "i",
+    "you",
+    "he",
+    "she",
+    "it",
+    "we",
+    "they",
 }
 
 PREPOSITIONS = {
-    "in", "on", "at", "by", "for", "from", "to",
-    "with", "about", "over", "under", "into",
-    "through", "between", "behind", "before", "after",
+    "in",
+    "on",
+    "at",
+    "for",
+    "to",
+    "with",
+    "from",
+    "between",
+    "before",
+    "after",
+}
+
+TAG_DESCRIPTIONS: Dict[str, str] = {
+    "N": "Sustantivo",
+    "V": "Verbo",
+    "ADJ": "Adjetivo",
+    "ADV": "Adverbio",
+    "DET": "Determinante / artículo",
+    "PRON": "Pronombre",
+    "PREP": "Preposición",
+    "CONJ": "Conjunción",
+    "INTJ": "Interjección",
+    "EOF": "Fin de entrada",
+    "UNK": "Desconocido (tratado como sustantivo)",
 }
 
 
@@ -53,8 +84,10 @@ class ParseError(Exception):
 def tag_for_parser(text: str) -> List[Tok]:
     base = tag_sentence(text)
     tokens: List[Tok] = []
+
     for idx, (word, coarse) in enumerate(base):
         w = word.lower()
+
         if w in DETERMINERS:
             tag = "DET"
         elif w in PRONOUNS:
@@ -68,7 +101,9 @@ def tag_for_parser(text: str) -> List[Tok]:
                     tag = "ADV"
                 else:
                     tag = "N"
+
         tokens.append(Tok(word=word, pos=tag, index=idx))
+
     tokens.append(Tok(word="<EOF>", pos="EOF", index=len(tokens)))
     return tokens
 
@@ -99,30 +134,40 @@ class RecursiveDescentParser:
 
     def parse_NP(self) -> Node:
         tok = self.current()
+
         if tok.pos == "PRON":
             t = self.accept(["PRON"])
             return Node("NP", [Node(f"{t.word}/{t.pos}", [])])
+
         children: List[Node] = []
+
         if self.current().pos == "DET":
             det_tok = self.accept(["DET"])
             children.append(Node(f"{det_tok.word}/{det_tok.pos}", []))
+
         while self.current().pos == "ADJ":
             adj_tok = self.accept(["ADJ"])
             children.append(Node(f"{adj_tok.word}/{adj_tok.pos}", []))
+
         n_tok = self.accept(["N"])
         children.append(Node(f"{n_tok.word}/{n_tok.pos}", []))
+
         return Node("NP", children)
 
     def parse_VP(self) -> Node:
         children: List[Node] = []
+
         v_tok = self.accept(["V"])
         children.append(Node(f"{v_tok.word}/{v_tok.pos}", []))
+
         if self.current().pos in {"DET", "ADJ", "N", "PRON"}:
             obj = self.parse_NP()
             children.append(obj)
+
         while self.current().pos == "PREP":
             pp = self.parse_PP()
             children.append(pp)
+
         return Node("VP", children)
 
     def parse_PP(self) -> Node:

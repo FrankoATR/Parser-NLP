@@ -1,53 +1,99 @@
 from __future__ import annotations
 
 import re
-from pathlib import Path
 from typing import Dict, List, Tuple
 
-import typer
-from rich.console import Console
-from rich.table import Table
+TOKEN_RE = re.compile(r"[A-Za-z']+")
 
-from .lexicon_loader import load_lexicon_from_csv, LexiconEntry
+LEXICON: Dict[str, str] = {
+    # Sustantivos (N)
+    "dog": "N",
+    "cat": "N",
+    "house": "N",
+    "bread": "N",
+    "music": "N",
+    "rule": "N",
+    "child": "N",
+    "text": "N",
+    "end": "N",
+    "car": "N",
+    "city": "N",
+    "day": "N",
+    "night": "N",
+    "water": "N",
+    "book": "N",
+    "student": "N",
+    "teacher": "N",
+    "game": "N",
+    "computer": "N",
+    "phone": "N",
+    "street": "N",
+    "world": "N",
+    "problem": "N",
+    "story": "N",
+    "friend": "N",
 
+    # Verbos (V)
+    "eat": "V",
+    "sleep": "V",
+    "run": "V",
+    "walk": "V",
+    "see": "V",
+    "like": "V",
+    "love": "V",
+    "read": "V",
+    "write": "V",
+    "play": "V",
+    "open": "V",
+    "close": "V",
+    "study": "V",
+    "talk": "V",
+    "listen": "V",
+    "want": "V",
+    "know": "V",
+    "make": "V",
+    "take": "V",
+    "give": "V",
+    "come": "V",
+    "go": "V",
+    "have": "V",
+    "say": "V",
+    "think": "V",
 
-BASE_DIR = Path(__file__).resolve().parents[1]
-LEXICON_FILE = BASE_DIR / "data" / "OPTED-Dictionary.csv"
+    # Adjetivos (ADJ)
+    "big": "ADJ",
+    "small": "ADJ",
+    "young": "ADJ",
+    "old": "ADJ",
+    "happy": "ADJ",
+    "sad": "ADJ",
+    "red": "ADJ",
+    "blue": "ADJ",
+    "green": "ADJ",
+    "good": "ADJ",
+    "bad": "ADJ",
+    "new": "ADJ",
+    "fast": "ADJ",
+    "slow": "ADJ",
+    "easy": "ADJ",
+    "hard": "ADJ",
 
-LEXICON: Dict[str, LexiconEntry] = load_lexicon_from_csv(LEXICON_FILE)
-
-WORD_RE = re.compile(r"[A-Za-z']+")
-
-console = Console()
-app = typer.Typer(add_completion=False)
+    # Adverbios (ADV)
+    "quickly": "ADV",
+    "slowly": "ADV",
+    "today": "ADV",
+    "always": "ADV",
+}
 
 
 def tokenize(text: str) -> List[str]:
-    return WORD_RE.findall(text)
+    return TOKEN_RE.findall(text)
 
 
 def tag_word(word: str) -> str:
-    entry = LEXICON.get(word.lower())
-    if entry is not None:
-        return entry.coarse_pos
-    return "UNK"
+    return LEXICON.get(word.lower(), "UNK")
 
 
 def tag_sentence(text: str) -> List[Tuple[str, str]]:
-    words = tokenize(text)
-    return [(w, tag_word(w)) for w in words]
-
-
-@app.command()
-def demo(sentence: str = typer.Argument("", help="Oración en inglés.")) -> None:
-    if not sentence:
-        sentence = typer.prompt("Oración en inglés")
-    tags = tag_sentence(sentence)
-    table = Table("Word", "Tag")
-    for w, pos in tags:
-        table.add_row(w, pos)
-    console.print(table)
-
-
-if __name__ == "__main__":
-    app()
+    tokens = tokenize(text)
+    return [(t, tag_word(t)) for t in tokens]
