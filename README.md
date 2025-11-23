@@ -40,7 +40,7 @@ PARSER-NLP/
 
 ### 2.1. Crear y activar el entorno virtual
 
-Desde la carpeta raíz del proyecto (`FASE 2`):
+Desde la carpeta raíz del proyecto (`PARSER-NLP`):
 
 #### En Windows (PowerShell)
 
@@ -53,7 +53,7 @@ Si usas `cmd.exe`:
 
 ```cmd
 python -m venv .venv
-.\.venv\Scriptsctivate.bat
+.\.venv\Scripts\Activate.bat
 ```
 
 #### En Linux / macOS
